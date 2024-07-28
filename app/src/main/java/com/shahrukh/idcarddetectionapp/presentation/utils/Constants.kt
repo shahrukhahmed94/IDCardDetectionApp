@@ -14,7 +14,7 @@ object Constants {
     const val ORIGINAL_IMAGE_HEIGHT = 640f
 
     // TensorFlow Lite
-    const val MODEL_MAX_RESULTS_COUNT = 10
+    const val MODEL_MAX_RESULTS_COUNT = 1
     const val MODEL_PATH = "detect_quant_metadata.tflite"
 
 
