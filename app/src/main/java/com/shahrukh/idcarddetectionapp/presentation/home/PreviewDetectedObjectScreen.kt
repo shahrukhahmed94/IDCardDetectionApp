@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -32,10 +33,21 @@ fun PreviewDetectedObjectScreen(
 
   //  Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
 
-    Column(modifier = Modifier.fillMaxSize().background(Color.White)) {
+    Column(modifier = Modifier
+        .fillMaxSize()
+        .background(Color.White)) {
 
 
-        Text(text = "Screen Called!")
+        Spacer(modifier = Modifier.height(50.dp))
+
+        Text(
+            text = "Preview Detected Object",
+            fontSize = 25.sp,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 20.dp)
+
+        )
 
         Spacer(modifier = Modifier.height(20.dp))
         (capturedImageBit?.asImageBitmap() )?.let {
@@ -47,7 +59,7 @@ fun PreviewDetectedObjectScreen(
                 contentDescription = "Detected Object",
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(200.dp)
+                    .height(400.dp)
             )
         }
     }
