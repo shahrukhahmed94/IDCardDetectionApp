@@ -42,7 +42,7 @@ fun PreviewDetectedObjectScreen(
         Spacer(modifier = Modifier.height(50.dp))
 
         Text(
-            text = "Preview Detected Object",
+            text = "Cropped Detected Object",
             fontSize = 25.sp,
             modifier = Modifier
                 .fillMaxWidth()
