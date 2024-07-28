@@ -10,8 +10,8 @@ object Constants {
     // Values
     const val INITIAL_CONFIDENCE_SCORE = 0.5f
 
-    const val ORIGINAL_IMAGE_WIDTH = 320f
-    const val ORIGINAL_IMAGE_HEIGHT = 320f
+    const val ORIGINAL_IMAGE_WIDTH = 480f
+    const val ORIGINAL_IMAGE_HEIGHT = 640f
 
     // TensorFlow Lite
     const val MODEL_MAX_RESULTS_COUNT = 10
@@ -19,5 +19,6 @@ object Constants {
 
 
  var capturedImageBit: Bitmap? = null
+    var originalImageBitmap: Bitmap? = null
 
 }

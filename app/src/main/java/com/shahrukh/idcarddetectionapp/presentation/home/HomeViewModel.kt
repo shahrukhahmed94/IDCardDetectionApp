@@ -40,7 +40,10 @@ import androidx.navigation.NavController
 import com.shahrukh.idcarddetectionapp.domain.manager.ObjectDetectionManager
 import com.shahrukh.idcarddetectionapp.domain.model.Detection
 import com.shahrukh.idcarddetectionapp.presentation.utils.CameraFrameAnalyzer
+import com.shahrukh.idcarddetectionapp.presentation.utils.Constants.ORIGINAL_IMAGE_HEIGHT
+import com.shahrukh.idcarddetectionapp.presentation.utils.Constants.ORIGINAL_IMAGE_WIDTH
 import com.shahrukh.idcarddetectionapp.presentation.utils.Constants.capturedImageBit
+import com.shahrukh.idcarddetectionapp.presentation.utils.Constants.originalImageBitmap
 import com.shahrukh.idcarddetectionapp.presentation.utils.Routes
 import kotlinx.coroutines.CompletableDeferred
 import java.lang.Float.max
@@ -60,6 +63,7 @@ class HomeViewModel @Inject constructor(
     val isImageSavedStateFlow = _isImageSavedStateFlow.asStateFlow()
 
     var isObjDetected =  MutableStateFlow(false)
+
 
 
 
@@ -108,9 +112,12 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    fun cropImage(bitmap: Bitmap, boundingBox: RectF): Bitmap {
-        val originalWidth = bitmap.width
-        val originalHeight = bitmap.height
+    fun cropImage(bitmap: Bitmap, boundingBox: RectF, tensorImageWidth: Int, tensorImageHeight: Int): Bitmap {
+        //val originalWidth = bitmap.width
+        //val originalHeight = bitmap.height
+
+        val originalWidth = tensorImageWidth
+        val originalHeight = tensorImageHeight
 
         val left = boundingBox.left.coerceIn(0f, originalWidth.toFloat()).toInt()
         val top = boundingBox.top.coerceIn(0f, originalHeight.toFloat()).toInt()
@@ -161,11 +168,7 @@ class HomeViewModel @Inject constructor(
                         Matrix().apply {
                             postRotate(image.imageInfo.rotationDegrees.toFloat())
 
-                            // Inverting image along X-axis when captured via Front-Camera
-//                            val selectedCamera = getSelectedCamera(cameraController)
-//                            if (selectedCamera == CameraSelector.DEFAULT_FRONT_CAMERA) {
-//                                postScale(-1f, 1f)
-//                            }
+
                         }
 
                     // Creating a new Bitmap via createBitmap using 'rotatedImageMatrix'
@@ -175,6 +178,7 @@ class HomeViewModel @Inject constructor(
                         0,
                         image.width,
                         image.height,
+
                         rotatedImageMatrix,
                         true
                     )
@@ -197,20 +201,7 @@ class HomeViewModel @Inject constructor(
                        // capturedImageBitmap = combinedBitmap
                     //)
 
-                    viewModelScope.launch {
-                        val savedBitmap = saveBitmapToDevice(context, combinedBitmap)
-                        if (savedBitmap != null) {
 
-                            capturedImageBit = savedBitmap
-                            navController.navigate(Routes.ROUTE_PREVIEW_DETECTED_OBJECT_SCREEN)
-                            Log.i("Saved Bitmap is",savedBitmap.toString())
-                            // Handle the successfully saved bitmap
-                            Log.d(TAG, "Image saved successfully")
-                        } else {
-                            // Handle the failure
-                            Log.e(TAG, "Failed to save image")
-                        }
-                    }
 
 
 
@@ -227,8 +218,26 @@ class HomeViewModel @Inject constructor(
 
                     val detection = detections.firstOrNull()
                     if (detection != null) {
-                        val croppedBitmap = cropImage(rotatedBitmap, detection.boundingBox)
 
+                        val cropped = Bitmap.createBitmap(combinedBitmap, detection.boundingBox.left.toInt().plus(100),detection.boundingBox.top.toInt().plus(100),ORIGINAL_IMAGE_WIDTH.toInt(),ORIGINAL_IMAGE_HEIGHT.toInt())
+                        //val croppedBitmap = cropImage(rotatedBitmap, detection.boundingBox,detection.tensorImageWidth,detection.tensorImageHeight)
+
+                        viewModelScope.launch {
+                            val savedBitmap = saveBitmapToDevice(context, cropped)
+                            val originalBitmap = saveBitmapToDevice(context,combinedBitmap)
+                            if (savedBitmap != null) {
+
+                                capturedImageBit = savedBitmap
+                                originalImageBitmap  = originalBitmap
+                                navController.navigate(Routes.ROUTE_PREVIEW_DETECTED_OBJECT_SCREEN)
+                                Log.i("Saved Bitmap is",savedBitmap.toString())
+                                // Handle the successfully saved bitmap
+                                Log.d(TAG, "Image saved successfully")
+                            } else {
+                                // Handle the failure
+                                Log.e(TAG, "Failed to save image")
+                            }
+                        }
                         //val uri = saveBitmapToDevice(context, croppedBitmap)
 
                        // navController.navigate(Screen.Preview.createRoute(uri.toString()))

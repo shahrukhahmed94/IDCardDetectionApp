@@ -21,6 +21,7 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.shahrukh.idcarddetectionapp.presentation.utils.Constants.capturedImageBit
+import com.shahrukh.idcarddetectionapp.presentation.utils.Constants.originalImageBitmap
 
 @Composable
 fun PreviewDetectedObjectScreen(
@@ -59,8 +60,35 @@ fun PreviewDetectedObjectScreen(
                 contentDescription = "Detected Object",
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(400.dp)
+                    .height(200.dp)
             )
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            Text("Orginal Captured Image",
+                fontSize = 25.sp,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 20.dp)
+                )
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            (originalImageBitmap?.asImageBitmap() )?.let {
+
+               // Log.i("Captured Image Bitmap", capturedImageBit?.asImageBitmap().toString())
+                Image(
+                    // bitmap = croppedImage.asImageBitmap(),
+                    bitmap = it,
+                    contentDescription = "Detected Object",
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(200.dp)
+                )
+
+
+
         }
     }
+}
 }
