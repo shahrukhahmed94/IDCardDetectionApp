@@ -113,21 +113,43 @@ class HomeViewModel @Inject constructor(
     }
 
     fun cropImage(bitmap: Bitmap, boundingBox: RectF, tensorImageWidth: Int, tensorImageHeight: Int): Bitmap {
-        //val originalWidth = bitmap.width
-        //val originalHeight = bitmap.height
+        val originalWidth = bitmap.width
+        val originalHeight = bitmap.height
 
-        val originalWidth = tensorImageWidth
-        val originalHeight = tensorImageHeight
 
-        val left = boundingBox.left.coerceIn(0f, originalWidth.toFloat()).toInt()
-        val top = boundingBox.top.coerceIn(0f, originalHeight.toFloat()).toInt()
-        val right = boundingBox.right.coerceIn(0f, originalWidth.toFloat()).toInt()
-        val bottom = boundingBox.bottom.coerceIn(0f, originalHeight.toFloat()).toInt()
+        // Calculate scaling factors
+        val scaleX = originalWidth.toFloat() / tensorImageWidth
+        val scaleY = originalHeight.toFloat() / tensorImageHeight
 
+
+        // Convert bounding box coordinates to original image dimensions
+        val left = (boundingBox.left * scaleX).toInt()
+        val top = (boundingBox.top * scaleY).toInt()
+        val right = (boundingBox.right * scaleX).toInt()
+        val bottom = (boundingBox.bottom * scaleY).toInt()
+
+
+        // Ensure dimensions are within bounds
         val width = (right - left).coerceAtLeast(1)
         val height = (bottom - top).coerceAtLeast(1)
 
-        return Bitmap.createBitmap(bitmap, left, top, width, height)
+        // Ensure the cropping rectangle is within the bitmap bounds
+        val adjustedLeft = left.coerceIn(0, originalWidth - 1)
+        val adjustedTop = top.coerceIn(0, originalHeight - 1)
+        val adjustedRight = (adjustedLeft + width).coerceAtMost(originalWidth)
+        val adjustedBottom = (adjustedTop + height).coerceAtMost(originalHeight)
+
+
+        // Crop the image
+        return Bitmap.createBitmap(
+            bitmap,
+            adjustedLeft,
+            adjustedTop,
+            adjustedRight - adjustedLeft,
+            adjustedBottom - adjustedTop
+        )
+
+
     }
 
 
@@ -219,11 +241,10 @@ class HomeViewModel @Inject constructor(
                     val detection = detections.firstOrNull()
                     if (detection != null) {
 
-                        val cropped = Bitmap.createBitmap(combinedBitmap, detection.boundingBox.left.toInt().plus(100),detection.boundingBox.top.toInt().plus(100),ORIGINAL_IMAGE_WIDTH.toInt(),ORIGINAL_IMAGE_HEIGHT.toInt())
-                        //val croppedBitmap = cropImage(rotatedBitmap, detection.boundingBox,detection.tensorImageWidth,detection.tensorImageHeight)
+                        val croppedBitmap = cropImage(rotatedBitmap, detection.boundingBox,detection.tensorImageWidth,detection.tensorImageHeight)
 
                         viewModelScope.launch {
-                            val savedBitmap = saveBitmapToDevice(context, cropped)
+                            val savedBitmap = saveBitmapToDevice(context, croppedBitmap)
                             val originalBitmap = saveBitmapToDevice(context,combinedBitmap)
                             if (savedBitmap != null) {
 
