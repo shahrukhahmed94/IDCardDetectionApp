@@ -46,15 +46,15 @@ fun DrawDetectionBox(detection: Detection) {
         color = getColorForLabel(detection.detectedObjectName)      // Assigning a color based on the object label
     })
 
-    val xScale = screenWidth / detection.tensorImageWidth
-    val yScale = screenHeight / detection.tensorImageHeight
+    val xScale = (screenWidth / (detection.tensorImageWidth  ))
+    val yScale = screenHeight / (detection.tensorImageHeight  )
 
     // Scale the bounding box from the detection to match the display dimensions
     val scaledBox = RectF(
-        detection.boundingBox.left * xScale,
-        detection.boundingBox.top * yScale,
-        detection.boundingBox.right * xScale,
-        detection.boundingBox.bottom * yScale
+        (detection.boundingBox.left  - 40) * xScale,
+        (detection.boundingBox.top - 40) * yScale,
+        (detection.boundingBox.right + 40) * xScale,
+        (detection.boundingBox.bottom - 60) * yScale
     ).also {
         // Ensure the bounding box doesn't go outside of the screen dimensions
         it.left = it.left.coerceAtLeast(0f)
@@ -70,6 +70,7 @@ fun DrawDetectionBox(detection: Detection) {
         (paint.value.color.green * 255),
         (paint.value.color.blue * 255)
     )
+
 
     // Define the text size in pixels based on density and desired sp size
     val density = LocalDensity.current.density

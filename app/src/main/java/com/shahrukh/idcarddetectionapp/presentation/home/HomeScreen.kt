@@ -104,6 +104,7 @@ fun HomeScreen(
                         context = context
                     ),
                     onObjectDetectionResults = {
+
                         detections = it
 
                         // Clear the previous RectFs and add all new ones

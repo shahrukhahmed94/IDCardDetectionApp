@@ -113,6 +113,7 @@ class HomeViewModel @Inject constructor(
     }
 
     fun cropImage(bitmap: Bitmap, boundingBox: RectF, tensorImageWidth: Int, tensorImageHeight: Int): Bitmap {
+
         val originalWidth = bitmap.width
         val originalHeight = bitmap.height
 
@@ -123,10 +124,10 @@ class HomeViewModel @Inject constructor(
 
 
         // Convert bounding box coordinates to original image dimensions
-        val left = (boundingBox.left * scaleX).toInt()
-        val top = (boundingBox.top * scaleY).toInt()
-        val right = (boundingBox.right * scaleX).toInt()
-        val bottom = (boundingBox.bottom * scaleY).toInt()
+        val left = ( (boundingBox.left  ) * scaleX).toInt()
+        val top = ( (boundingBox.top  ) * scaleY).toInt()
+        val right = ( (boundingBox.right - 5 ) * scaleX).toInt()
+        val bottom = ( (boundingBox.bottom - 15 ) * scaleY).toInt()
 
 
         // Ensure dimensions are within bounds
@@ -185,7 +186,7 @@ class HomeViewModel @Inject constructor(
                     super.onCaptureSuccess(image)
                     Log.d(TAG, "onCaptureSuccess() called for capturePhoto")
 
-                    // Rotating the image by transforming it via Matrix using rotationDegrees
+
                     val rotatedImageMatrix: Matrix =
                         Matrix().apply {
                             postRotate(image.imageInfo.rotationDegrees.toFloat())
@@ -211,32 +212,6 @@ class HomeViewModel @Inject constructor(
                         screenWidth,
                         screenHeight
                     )
-
-                    // Save the Image-Bitmap to Device
-                   // saveBitmapToDevice(
-                     //   context = context,
-                       // capturedImageBitmap = combinedBitmap
-                    //)
-
-                   // val uri = saveBitmapToDevice(
-                     //   context = context,
-                       // capturedImageBitmap = combinedBitmap
-                    //)
-
-
-
-
-
-
-
-                     //  isObjDetected.value = true
-
-
-
-                //    navController.navigate(
-                  //      Routes.getPreviewDetectedObjectRoute(
-                    //        uri.toString()
-                      //  ))
 
                     val detection = detections.firstOrNull()
                     if (detection != null) {
