@@ -21,4 +21,6 @@ dependencyResolutionManagement {
 
 rootProject.name = "IDCardDetectionApp"
 include(":app")
-include(":card-cropper")
+include(":app", ":card_cropper")
+
+include(":card_cropper")

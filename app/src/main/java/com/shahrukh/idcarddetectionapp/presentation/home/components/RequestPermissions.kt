@@ -3,13 +3,16 @@ package com.shahrukh.idcarddetectionapp.presentation.home.components
 import android.os.Build
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
-fun RequestPermissions() {
+fun RequestPermissions(
+    onPermissionsGranted: () -> Unit
+) {
     // Camera permission state
     val cameraPermissionState = rememberPermissionState(
         android.Manifest.permission.CAMERA
@@ -22,15 +25,16 @@ fun RequestPermissions() {
         )
     } else null
 
-    // Check the grant status of permissions (if null, granting storage permission by default)
+    // Check the grant status of permissions
     val isCameraGranted = cameraPermissionState.status.isGranted
     val isStorageGranted = storagePermissionState?.status?.isGranted ?: true
 
-    if (!isCameraGranted || !isStorageGranted) {
-        // Automatically launch the permission request when the composable appears on the screen
-        LaunchedEffect(cameraPermissionState, storagePermissionState) {
+    LaunchedEffect(cameraPermissionState, storagePermissionState) {
+        if (!isCameraGranted || !isStorageGranted) {
             cameraPermissionState.launchPermissionRequest()
             storagePermissionState?.launchPermissionRequest()
+        } else {
+            onPermissionsGranted()
         }
     }
 }

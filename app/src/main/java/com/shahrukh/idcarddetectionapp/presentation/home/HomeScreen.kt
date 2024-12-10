@@ -32,8 +32,12 @@ import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.zIndex
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import com.avanza.card_cropper.domain.manager.ObjectDetectionManager
+import com.avanza.card_cropper.libexposer.CameraFrameAnalyzerFactory
+import com.avanza.card_cropper.libexposer.ObjectDetectionManagerFactory
+import com.avanza.card_cropper.manager.ObjectDetectionManagerImpl
 import com.shahrukh.idcarddetectionapp.R
-import com.shahrukh.idcarddetectionapp.data.manager.ObjectDetectionManagerImpl
+
 import com.shahrukh.idcarddetectionapp.domain.model.Detection
 import com.shahrukh.idcarddetectionapp.presentation.common.ImageButton
 import com.shahrukh.idcarddetectionapp.presentation.home.components.CameraOverlay
@@ -41,6 +45,7 @@ import com.shahrukh.idcarddetectionapp.presentation.home.components.CameraPrevie
 import com.shahrukh.idcarddetectionapp.presentation.home.components.ObjectCounter
 import com.shahrukh.idcarddetectionapp.presentation.home.components.RequestPermissions
 import com.shahrukh.idcarddetectionapp.presentation.utils.CameraFrameAnalyzer
+
 import com.shahrukh.idcarddetectionapp.presentation.utils.Constants
 import com.shahrukh.idcarddetectionapp.presentation.utils.Constants.capturedImageBit
 import com.shahrukh.idcarddetectionapp.presentation.utils.Dimens
@@ -60,7 +65,7 @@ fun HomeScreen(
 
 
     // Requesting necessary permissions
-    RequestPermissions()
+    //RequestPermissions()
 
     // Observing the state for whether an image is saved successfully
     val isImageSavedStateFlow by viewModel.isImageSavedStateFlow.collectAsState()
@@ -90,40 +95,76 @@ fun HomeScreen(
         ) {
 
             // A state-backed list to store detected objects
-            var detections by remember {
+           /** var detections by remember {
                 mutableStateOf(emptyList<Detection>())
+            }*/
+
+
+            var detections2 by remember {
+                mutableStateOf(emptyList<com.avanza.card_cropper.domain.model.Detection>())
             }
+
 
             // Calling it to automatically re-invoke Composable(s) when state of 'detections' changes
-            LaunchedEffect(detections) {}
 
-            // Preparing Image Analyzer
-            val cameraFrameAnalyzer = remember {
-                CameraFrameAnalyzer(
-                    objectDetectionManager = ObjectDetectionManagerImpl(
-                        context = context
-                    ),
-                    onObjectDetectionResults = {
 
-                        detections = it
+            //LaunchedEffect(detections) {}
 
-                        // Clear the previous RectFs and add all new ones
-                        boundingBoxCoordinatesState.clear()
-                        detections.forEach { detection ->
-                            boundingBoxCoordinatesState.add(detection.boundingBox)
-                        }
-                    },
-                    confidenceScoreState = confidenceScoreState
-                )
+            LaunchedEffect(detections2) {}
+
+
+
+
+
+
+
+
+           // Preparing Image Analyzer using the factory
+           // Initialize the ObjectDetectionManager
+           val objectDetectionManager = ObjectDetectionManagerImpl(context)
+            // Initialize the CameraFrameAnalyzerFactory
+            // State to track if CameraFrameAnalyzerFactory has been initialized
+            var isFactoryInitialized by remember { mutableStateOf(false) }
+
+// Initialize the CameraFrameAnalyzerFactory inside LaunchedEffect
+            LaunchedEffect(Unit) {
+                CameraFrameAnalyzerFactory.init(objectDetectionManager)
+                isFactoryInitialized = CameraFrameAnalyzerFactory.isInitialized() // Check initialization
             }
 
+            val cameraFrameAnalyzer = remember {
+                if (isFactoryInitialized) {
+                    CameraFrameAnalyzerFactory.createCardCropperAI(
+                        onObjectDetectionResults = {
+                            detections2 = it
+                        },
+                        confidenceScoreState = confidenceScoreState
+                    )
+                } else {
+                    null // Handle the case where factory isn't initialized yet
+                }
+            }
+
+
+
+
+
             // Prepare Camera Controller
-            val cameraController = remember {
+           /** val cameraController = remember {
                 viewModel.prepareCameraController(
                     context,
                     cameraFrameAnalyzer
                 )
-            }
+            }*/
+
+            val cameraController = remember {
+               cameraFrameAnalyzer?.let {
+                   ObjectDetectionManagerFactory.prepareCameraController(
+                       context,
+                       it
+                   )
+               }
+           }
 
             // Combined Column for Camera Preview, CameraOverlay & Bottom UI
             Column(
@@ -138,32 +179,38 @@ fun HomeScreen(
                         .weight(0.8f)
                 ) {
                     // Camera Preview
-                    CameraPreview(
-                        controller = remember {
-                            cameraController
-                        },
-                        modifier = Modifier.fillMaxSize(),
-                        onPreviewSizeChanged = { newSize ->
-                            previewSizeState.value = newSize
+                    remember {
+                        cameraController
+                    }?.let {
+                        CameraPreview(
+                            controller = it,
+                            modifier = Modifier.fillMaxSize(),
+                            onPreviewSizeChanged = { newSize ->
+                                previewSizeState.value = newSize
 
-                            // Get Scale-Factors along X and Y depending on size of camera-preview
-                            val scaleFactors = ImageScalingUtils.getScaleFactors(
-                                newSize.width,
-                                newSize.height
-                            )
+                                // Get Scale-Factors along X and Y depending on size of camera-preview
+                                val scaleFactors = ImageScalingUtils.getScaleFactors(
+                                    newSize.width,
+                                    newSize.height
+                                )
 
-                            scaleFactorX = scaleFactors[0]
-                            scaleFactorY = scaleFactors[1]
+                                scaleFactorX = scaleFactors[0]
+                                scaleFactorY = scaleFactors[1]
 
-                            Log.d(
-                                "HomeViewModel",
-                                "HomeScreen() called with: newSize = $scaleFactorX & scaleFactorY = $scaleFactorY"
-                            )
-                        }
-                    )
+                                Log.d(
+                                    "HomeViewModel",
+                                    "HomeScreen() called with: newSize = $scaleFactorX & scaleFactorY = $scaleFactorY"
+                                )
+                            }
+                        )
+                    }
 
                     // Add CameraOverlay here so it overlays on top of CameraPreview
-                    CameraOverlay(detections = detections)
+
+
+
+                   com.avanza.card_cropper.presentation.home.components.CameraOverlay(detections = detections2)
+                    /**CameraOverlay(detections = detections) */
                 }
 
                 // Bottom column with Capture-Image and Threshold Level Slider
@@ -183,14 +230,26 @@ fun HomeScreen(
                             .align(Alignment.CenterHorizontally)
                             .clickable {
                                 // Capture and Saves Photo
-                                viewModel.capturePhoto(
-                                    context = context,
-                                    navController = navController,
-                                    cameraController = cameraController,
-                                    screenWidth,
-                                    screenHeight,
-                                    detections
-                                )
+                                /** viewModel.capturePhoto(
+                                context = context,
+                                navController = navController,
+                                cameraController = cameraController,
+                                screenWidth,
+                                screenHeight,
+                                detections
+                                )*/
+
+                                cameraController?.let {
+                                    ObjectDetectionManagerFactory.capturePhoto(
+                                        context = context,
+                                      //  navController = navController,
+                                        cameraController = it,
+                                        screenWidth,
+                                        screenHeight,
+                                        detections2
+                                    )
+                                }
+
 
                                 // Show toast of Save State
                                 if (isImageSavedStateFlow) {
@@ -233,9 +292,11 @@ fun HomeScreen(
 
 
                     // Detected Object Count Composable
-                    ObjectCounter(objectCount = detections.size)
+                  /**  ObjectCounter(objectCount = detections.size) */
+                    com.avanza.card_cropper.presentation.home.components.ObjectCounter(objectCount = detections2.size)
                 }
             }
         }
 
     }
+
